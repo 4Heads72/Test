@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="sv" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Formelomvandling - Lös ut variabeln</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- KaTeX CSS & JS CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+
+    <style>
+        /* Custom KaTeX Sizing Rules for significantly improved legibility on mobile */
+        .katex-display {
+            margin: 0.4em 0 !important;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 6px 0;
+        }
+
+        /* Base KaTeX bump across all inline elements */
+        .katex {
+            font-size: 1.22em !important;
+        }
+
+        /* Main Display Equation: Very bold and clear on all screens */
+        #equationDisplay .katex {
+            font-size: 2em !important;
+        }
+        @media (min-width: 640px) {
+            #equationDisplay .katex {
+                font-size: 2.5em !important;
+            }
+        }
+
+        /* Target Variable Pill Math */
+        #targetVarDisplay .katex {
+            font-size: 1.3em !important;
+            font-weight: 700 !important;
+        }
+
+        /* Choice Option Buttons Math Sizing */
+        .choice-btn .katex {
+            font-size: 1.35em !important;
+        }
+        @media (min-width: 640px) {
+            .choice-btn .katex {
+                font-size: 1.45em !important;
+            }
+        }
+
+        /* Step-by-Step Solution Math Sizing */
+        #stepsList .katex {
+            font-size: 1.2em !important;
+        }
+        #stepsList .katex-display {
+            font-size: 1.3em !important;
+            margin: 0.5em 0 !important;
+        }
+
+        /* Choice Button Styling & Touch Feedback */
+        .choice-btn {
+            transition: all 0.15s ease-in-out;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 4.5rem;
+        }
+        .choice-btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 font-sans antialiased flex flex-col justify-between selection:bg-brand-500 selection:text-white">
+
+    <!-- Top Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="bg-brand-600 text-white p-2 rounded-xl shadow-md">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Formelomvandling</h1>
+                    <p class="text-xs text-slate-500">Lös ut variabeln • Träna för flyt</p>
+                </div>
+            </div>
+
+            <!-- Active Practice Timer -->
+            <div class="flex items-center bg-slate-100 hover:bg-slate-200 transition px-3 py-1.5 rounded-full border border-slate-200 text-xs sm:text-sm font-medium text-slate-700">
+                <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="mr-1 text-slate-500 font-normal hidden sm:inline">Tid:</span>
+                <span id="timerDisplay" class="font-mono font-bold w-12 text-slate-900">00:00</span>
+                <button id="toggleTimerBtn" title="Pausa/Starta tidtagning" class="ml-1 text-slate-500 hover:text-slate-800 focus:outline-none">
+                    <svg id="pauseIcon" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                    </svg>
+                    <svg id="playIcon" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Body Container -->
+    <main class="max-w-2xl mx-auto w-full px-4 py-4 flex-grow flex flex-col space-y-4">
+
+        <!-- Stats Bar: Correct, Incorrect, Consecutive Correct -->
+        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between text-xs sm:text-sm">
+            <div class="flex items-center space-x-2 font-bold text-slate-800">
+                <span class="text-amber-500 text-base sm:text-lg">⚡</span>
+                <span>Rätt i rad:</span>
+                <span id="streakCountText" class="text-brand-600 font-extrabold text-base sm:text-lg">0</span>
+            </div>
+            
+            <div class="flex items-center space-x-4 font-semibold text-xs sm:text-sm">
+                <div class="flex items-center space-x-1.5 text-emerald-600">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <span>Rätt: <strong id="correctCount" class="font-bold">0</strong></span>
+                </div>
+                <div class="flex items-center space-x-1.5 text-rose-500">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                    <span>Fel: <strong id="incorrectCount" class="font-bold">0</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 shadow-md flex flex-col justify-between relative overflow-hidden">
+            
+            <!-- Question Instruction Header -->
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h2 class="text-base sm:text-xl font-bold text-slate-800 flex items-center space-x-2">
+                    <span>Lös ut</span>
+                    <span id="targetVarDisplay" class="bg-amber-100 text-amber-900 px-3 py-1 rounded-xl border border-amber-300 shadow-sm inline-flex items-center justify-center"></span>
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-500">Välj det korrekta alternativet nedan.</p>
+            </div>
+
+            <!-- Main Equation Render Container -->
+            <div class="my-3 py-5 px-4 bg-slate-50 rounded-2xl border border-slate-200 text-center flex items-center justify-center min-h-[110px] shadow-inner overflow-x-auto">
+                <div id="equationDisplay" class="text-slate-900 font-medium"></div>
+            </div>
+
+            <!-- Multiple Choice Grid (A, B, C, D) -->
+            <div id="optionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-3">
+                <!-- Option buttons populated via JS -->
+            </div>
+
+            <!-- Feedback Banner (Correct / Incorrect) -->
+            <div id="feedbackBanner" class="hidden mt-4 p-4 rounded-2xl border text-sm font-semibold flex items-center justify-between">
+                <div id="feedbackText" class="flex items-center space-x-2"></div>
+                <button onclick="nextQuestion()" class="bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-2.5 rounded-xl text-xs sm:text-sm transition shadow-md flex items-center space-x-1.5">
+                    <span>Nästa fråga</span>
+                    <span>→</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step-by-Step Solution Card -->
+        <div id="solutionCard" class="hidden bg-emerald-50/80 border border-emerald-200 p-4 sm:p-5 rounded-3xl shadow-sm space-y-3">
+            <div class="flex items-center justify-between border-b border-emerald-200/80 pb-2.5">
+                <h3 class="text-emerald-900 font-bold text-sm sm:text-base flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    <span>Steg-för-steg lösning</span>
+                </h3>
+                <span class="text-xs text-emerald-700 font-medium">Förklaring</span>
+            </div>
+            
+            <!-- Rendered solution steps -->
+            <div id="stepsList" class="space-y-3 text-xs sm:text-sm text-slate-800 custom-scroll">
+                <!-- Steps generated dynamically with KaTeX math -->
+            </div>
+        </div>
+
+        <!-- Action Control Buttons -->
+        <div class="flex items-center justify-between pt-1">
+            <button id="showSolutionBtn" onclick="toggleSolution()" class="text-xs sm:text-sm text-slate-500 hover:text-slate-800 underline flex items-center space-x-1.5 focus:outline-none">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                <span>Visa lösning utan att svara</span>
+            </button>
+
+            <button onclick="resetStats()" class="text-xs sm:text-sm text-slate-400 hover:text-rose-600 transition flex items-center space-x-1 focus:outline-none">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <span>Nollställ statistik</span>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-3.5 mt-6">
+        <div class="max-w-2xl mx-auto px-4 text-center text-xs text-slate-400">
+            Träningsverktyg i Matematik • Formelomvandling för gymnasiet och högstadiet
+        </div>
+    </footer>
+
+    <script>
+        /* Hidden Adaptive Level System */
+        let currentTier = 1; // 1, 2, or 3 (Invisible to student)
+        let consecutiveCorrect = 0; // Tracks "Rätt i rad"
+        let consecutiveWrong = 0;   // Tracks wrong answers for invisible downgrade
+        let correctTotal = 0;
+        let incorrectTotal = 0;
+
+        let currentProblem = null;
+        let answered = false;
+
+        // Active Session Timer
+        let timerSeconds = 0;
+        let timerRunning = true;
+        let timerInterval = null;
+
+        /**
+         * Replaces inline math enclosed in $...$ with HTML generated by KaTeX
+         * Ensures step-by-step math explanations render large and clean.
+         */
+        function renderMathInText(text) {
+            if (!text) return '';
+            return text.replace(/\$(.*?)\$/g, (match, mathContent) => {
+                try {
+                    return katex.renderToString(mathContent, {
+                        throwOnError: false,
+                        displayMode: false
+                    });
+                } catch (e) {
+                    return mathContent;
+                }
+            });
+        }
+
+        /* Utility Functions */
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function getRandomElement(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        /* Randomly swaps equation sides (LHS = RHS -> RHS = LHS) to prevent position memorization */
+        function maybeSwapSides(lhs, rhs) {
+            if (Math.random() > 0.5) {
+                return `${rhs} = ${lhs}`;
+            }
+            return `${lhs} = ${rhs}`;
+        }
+
+        /**
+         * Validates that the target variable is NOT already isolated on either side.
+         * Returns true if target variable is isolated (e.g., "x = ... " or " ... = x").
+         */
+        function isTargetIsolated(eqLatex, targetVar) {
+            const trimmed = eqLatex.trim();
+            const lhsMatch = new RegExp('^' + targetVar + '\\s*=').test(trimmed);
+            const rhsMatch = new RegExp('=\\s*' + targetVar + '$').test(trimmed);
+            return lhsMatch || rhsMatch;
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (timerRunning) {
+                    timerSeconds++;
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+            const secs = (timerSeconds % 60).toString().padStart(2, '0');
+            document.getElementById('timerDisplay').innerText = `${mins}:${secs}`;
+        }
+
+        document.getElementById('toggleTimerBtn').addEventListener('click', () => {
+            timerRunning = !timerRunning;
+            document.getElementById('pauseIcon').classList.toggle('hidden', !timerRunning);
+            document.getElementById('playIcon').classList.toggle('hidden', timerRunning);
+        });
+
+        /**
+         * TIER 1 GENERATORS
+         * Simple linear equations, ratios, simple fractions
+         */
+        function generateTier1() {
+            const templateType = getRandomInt(1, 5);
+
+            if (templateType === 1) {
+                // Type 1: 3x - 5 = y + 2
+                const A = getRandomInt(2, 5);
+                const B = getRandomInt(2, 8);
+                const C = getRandomInt(1, 6);
+                const target = getRandomElement(['x', 'y']);
+
+                const lhs = `${A}x - ${B}`;
+                const rhs = `y + ${C}`;
+                const eqLatex = maybeSwapSides(lhs, rhs);
+
+                if (target === 'x') {
+                    const sumBC = B + C;
+                    const correctLatex = `x = \\dfrac{y + ${sumBC}}{${A}}`;
+                    
+                    const distractors = [
+                        `x = \\dfrac{y - ${sumBC}}{${A}}`,
+                        `x = \\dfrac{y + ${Math.abs(C - B)}}{${A}}`,
+                        `x = ${A}(y + ${sumBC})`
+                    ];
+
+                    const steps = [
+                        { text: `Addera $${B}$ till båda sidor för att samla konstanterna:`, latex: `${A}x = y + ${C} + ${B} \\implies ${A}x = y + ${sumBC}` },
+                        { text: `Dividera båda sidor med $${A}$ för att isolera $x$:`, latex: `x = \\dfrac{y + ${sumBC}}{${A}}` }
+                    ];
+
+                    return { eqLatex, targetVar: 'x', targetVarLatex: 'x', correctLatex, distractors, steps };
+                } else {
+                    const sumBC = B + C;
+                    const correctLatex = `y = ${A}x - ${sumBC}`;
+
+                    const distractors = [
+                        `y = ${A}x + ${sumBC}`,
+                        `y = ${A}x - ${Math.abs(B - C)}`,
+                        `y = \\dfrac{${A}x - ${B}}{${C}}`
+                    ];
+
+                    const steps = [
+                        { text: `Subtrahera $${C}$ från båda sidor för att isolera $y$:`, latex: `y = ${A}x - ${B} - ${C}` },
+                        { text: `Förenkla konstanterna:`, latex: `y = ${A}x - ${sumBC}` }
+                    ];
+
+                    return { eqLatex, targetVar: 'y', targetVarLatex: 'y', correctLatex, distractors, steps };
+                }
+            } else if (templateType === 2) {
+                // Type 2: Ratio p*n = m or m/p = n (ensuring target is NOT isolated initially)
+                const vars = getRandomElement([
+                    { top: 'm', bot: 'n', res: 'p' },
+                    { top: 's', bot: 'r', res: 'v' },
+                    { top: 'a', bot: 'b', res: 'k' }
+                ]);
+                const target = getRandomElement(['res', 'top', 'bot']);
+
+                if (target === 'res') {
+                    // Equation where 'res' is in the denominator: m / res = bot
+                    const eqLatex = maybeSwapSides(`\\dfrac{${vars.top}}{${vars.res}}`, vars.bot);
+                    const correctLatex = `${vars.res} = \\dfrac{${vars.top}}{${vars.bot}}`;
+                    const distractors = [
+                        `${vars.res} = ${vars.top} \\cdot ${vars.bot}`,
+                        `${vars.res} = \\dfrac{${vars.bot}}{${vars.top}}`,
+                        `${vars.res} = ${vars.top} - ${vars.bot}`
+                    ];
+                    const steps = [
+                        { text: `Multiplicera båda sidor med $${vars.res}$:`, latex: `${vars.top} = ${vars.bot} \\cdot ${vars.res}` },
+                        { text: `Dividera med $${vars.bot}$ för att isolera $${vars.res}$:`, latex: `${vars.res} = \\dfrac{${vars.top}}{${vars.bot}}` }
+                    ];
+                    return { eqLatex, targetVar: vars.res, targetVarLatex: vars.res, correctLatex, distractors, steps };
+                } else if (target === 'top') {
+                    const eqLatex = maybeSwapSides(`\\dfrac{${vars.top}}{${vars.bot}}`, vars.res);
+                    const correctLatex = `${vars.top} = ${vars.res} \\cdot ${vars.bot}`;
+                    const distractors = [
+                        `${vars.top} = \\dfrac{${vars.res}}{${vars.bot}}`,
+                        `${vars.top} = \\dfrac{${vars.bot}}{${vars.res}}`,
+                        `${vars.top} = ${vars.res} + ${vars.bot}`
+                    ];
+                    const steps = [
+                        { text: `Multiplicera båda sidor med nämnaren $${vars.bot}$:`, latex: `${vars.res} \\cdot ${vars.bot} = ${vars.top}` },
+                        { text: `Skriv om med $${vars.top}$ isolerat:`, latex: `${vars.top} = ${vars.res} \\cdot ${vars.bot}` }
+                    ];
+                    return { eqLatex, targetVar: vars.top, targetVarLatex: vars.top, correctLatex, distractors, steps };
+                } else {
+                    const eqLatex = maybeSwapSides(`\\dfrac{${vars.top}}{${vars.bot}}`, vars.res);
+                    const correctLatex = `${vars.bot} = \\dfrac{${vars.top}}{${vars.res}}`;
+                    const distractors = [
+                        `${vars.bot} = ${vars.top} \\cdot ${vars.res}`,
+                        `${vars.bot} = \\dfrac{${vars.res}}{${vars.top}}`,
+                        `${vars.bot} = ${vars.top} - ${vars.res}`
+                    ];
+                    const steps = [
+                        { text: `Multiplicera båda sidor med $${vars.bot}$ för att få variabeln ur nämnaren:`, latex: `${vars.res} \\cdot ${vars.bot} = ${vars.top}` },
+                        { text: `Dividera båda sidor med $${vars.res}$ för att isolera $${vars.bot}$:`, latex: `${vars.bot} = \\dfrac{${vars.top}}{${vars.res}}` }
+                    ];
+                    return { eqLatex, targetVar: vars.bot, targetVarLatex: vars.bot, correctLatex, distractors, steps };
+                }
+            } else if (templateType === 3) {
+                // Type 3: 1 + b = 2a - 4
+                const A = getRandomInt(1, 5);
+                const C = getRandomInt(2, 4);
+                const D = getRandomInt(2, 6);
+
+                const eqLatex = maybeSwapSides(`${A} + b`, `${C}a - ${D}`);
+                const target = getRandomElement(['a', 'b']);
+
+                if (target === 'a') {
+                    const sumAD = A + D;
+                    const correctLatex = `a = \\dfrac{b + ${sumAD}}{${C}}`;
+                    const distractors = [
+                        `a = \\dfrac{b - ${sumAD}}{${C}}`,
+                        `a = \\dfrac{b + ${Math.abs(A - D)}}{${C}}`,
+                        `a = ${C}(b + ${sumAD})`
+                    ];
+                    const steps = [
+                        { text: `Addera $${D}$ till båda sidor:`, latex: `${A} + b + ${D} = ${C}a \\implies b + ${sumAD} = ${C}a` },
+                        { text: `Dividera båda sidor med $${C}$:`, latex: `a = \\dfrac{b + ${sumAD}}{${C}}` }
+                    ];
+                    return { eqLatex, targetVar: 'a', targetVarLatex: 'a', correctLatex, distractors, steps };
+                } else {
+                    const sumAD = A + D;
+                    const correctLatex = `b = ${C}a - ${sumAD}`;
+                    const distractors = [
+                        `b = ${C}a + ${sumAD}`,
+                        `b = ${C}a - ${Math.abs(D - A)}`,
+                        `b = \\dfrac{${C}a - ${D}}{${A}}`
+                    ];
+                    const steps = [
+                        { text: `Subtrahera $${A}$ från båda sidor för att isolera $b$:`, latex: `b = ${C}a - ${D} - ${A}` },
+                        { text: `Förenkla konstanterna:`, latex: `b = ${C}a - ${sumAD}` }
+                    ];
+                    return { eqLatex, targetVar: 'b', targetVarLatex: 'b', correctLatex, distractors, steps };
+                }
+            } else if (templateType === 4) {
+                // Type 4: 12 - 3x = y + 5x
+                const C1 = getRandomInt(10, 20);
+                const k1 = getRandomInt(2, 4);
+                const k2 = getRandomInt(3, 6);
+                const kSum = k1 + k2;
+
+                const eqLatex = maybeSwapSides(`${C1} - ${k1}x`, `y + ${k2}x`);
+                const target = getRandomElement(['x', 'y']);
+
+                if (target === 'x') {
+                    const correctLatex = `x = \\dfrac{${C1} - y}{${kSum}}`;
+                    const distractors = [
+                        `x = \\dfrac{${C1} + y}{${kSum}}`,
+                        `x = \\dfrac{${C1} - y}{${Math.abs(k2 - k1)}}`,
+                        `x = ${kSum}(${C1} - y)`
+                    ];
+                    const steps = [
+                        { text: `Addera $${k1}x$ på båda sidor för att samla alla $x$-termer:`, latex: `${C1} = y + ${k2}x + ${k1}x \\implies ${C1} = y + ${kSum}x` },
+                        { text: `Subtrahera $y$ från båda sidor:`, latex: `${C1} - y = ${kSum}x` },
+                        { text: `Dividera med koefficienten $${kSum}$:`, latex: `x = \\dfrac{${C1} - y}{${kSum}}` }
+                    ];
+                    return { eqLatex, targetVar: 'x', targetVarLatex: 'x', correctLatex, distractors, steps };
+                } else {
+                    const correctLatex = `y = ${C1} - ${kSum}x`;
+                    const distractors = [
+                        `y = ${C1} + ${kSum}x`,
+                        `y = ${C1} - ${Math.abs(k2 - k1)}x`,
+                        `y = \\dfrac{${C1} - ${k1}x}{${k2}}`
+                    ];
+                    const steps = [
+                        { text: `Subtrahera $${k2}x$ från båda sidor för att isolera $y$:`, latex: `y = ${C1} - ${k1}x - ${k2}x` },
+                        { text: `Slå ihop $x$-termerna:`, latex: `y = ${C1} - ${kSum}x` }
+                    ];
+                    return { eqLatex, targetVar: 'y', targetVarLatex: 'y', correctLatex, distractors, steps };
+                }
+            } else {
+                // Type 5: 4s + 9 = 2t - 3s
+                const A = getRandomInt(2, 5);
+                const B = getRandomInt(3, 9);
+                const C = getRandomInt(2, 4);
+                const D = getRandomInt(1, 5);
+                const sumS = A + D;
+
+                const eqLatex = maybeSwapSides(`${A}s + ${B}`, `${C}t - ${D}s`);
+                const target = getRandomElement(['t', 's']);
+
+                if (target === 't') {
+                    const correctLatex = `t = \\dfrac{${sumS}s + ${B}}{${C}}`;
+                    const distractors = [
+                        `t = \\dfrac{${sumS}s - ${B}}{${C}}`,
+                        `t = \\dfrac{${Math.abs(A - D)}s + ${B}}{${C}}`,
+                        `t = ${C}(${sumS}s + ${B})`
+                    ];
+                    const steps = [
+                        { text: `Addera $${D}s$ på båda sidor för att samla $s$-termerna:`, latex: `${A}s + ${D}s + ${B} = ${C}t \\implies ${sumS}s + ${B} = ${C}t` },
+                        { text: `Dividera båda sidor med $${C}$:`, latex: `t = \\dfrac{${sumS}s + ${B}}{${C}}` }
+                    ];
+                    return { eqLatex, targetVar: 't', targetVarLatex: 't', correctLatex, distractors, steps };
+                } else {
+                    const correctLatex = `s = \\dfrac{${C}t - ${B}}{${sumS}}`;
+                    const distractors = [
+                        `s = \\dfrac{${C}t + ${B}}{${sumS}}`,
+                        `s = \\dfrac{${C}t - ${B}}{${Math.abs(A - D) || 1}}`,
+                        `s = ${sumS}(${C}t - ${B})`
+                    ];
+                    const steps = [
+                        { text: `Samla alla $s$-termer på samma sida:`, latex: `${sumS}s + ${B} = ${C}t` },
+                        { text: `Subtrahera $${B}$ från båda sidor:`, latex: `${sumS}s = ${C}t - ${B}` },
+                        { text: `Dividera med $${sumS}$:`, latex: `s = \\dfrac{${C}t - ${B}}{${sumS}}` }
+                    ];
+                    return { eqLatex, targetVar: 's', targetVarLatex: 's', correctLatex, distractors, steps };
+                }
+            }
+        }
+
+        /**
+         * TIER 2 GENERATORS
+         * Coefficients, fractions with linear terms, combined like terms
+         */
+        function generateTier2() {
+            const templateType = getRandomInt(1, 4);
+
+            if (templateType === 1) {
+                // Type 1: (a * q) / b = c
+                const v = getRandomElement([
+                    { a: 'a', q: 'q', b: 'b', c: 'c' },
+                    { a: 'k', q: 'x', b: 'm', c: 'p' }
+                ]);
+                const target = getRandomElement(['q', 'a', 'b']);
+                const eqLatex = maybeSwapSides(`\\dfrac{${v.a} ${v.q}}{${v.b}}`, v.c);
+
+                if (target === 'q') {
+                    const correctLatex = `${v.q} = \\dfrac{${v.b} ${v.c}}{${v.a}}`;
+                    const distractors = [
+                        `${v.q} = \\dfrac{${v.a} ${v.c}}{${v.b}}`,
+                        `${v.q} = \\dfrac{${v.a} ${v.b}}{${v.c}}`,
+                        `${v.q} = ${v.a} ${v.b} ${v.c}`
+                    ];
+                    const steps = [
+                        { text: `Multiplicera båda sidor med nämnaren $${v.b}$:`, latex: `${v.a} ${v.q} = ${v.b} ${v.c}` },
+                        { text: `Dividera båda sidor med $${v.a}$ för att isolera $${v.q}$:`, latex: `${v.q} = \\dfrac{${v.b} ${v.c}}{${v.a}}` }
+                    ];
+                    return { eqLatex, targetVar: v.q, targetVarLatex: v.q, correctLatex, distractors, steps };
+                } else if (target === 'b') {
+                    const correctLatex = `${v.b} = \\dfrac{${v.a} ${v.q}}{${v.c}}`;
+                    const distractors = [
+                        `${v.b} = \\dfrac{${v.c}}{${v.a} ${v.q}}`,
+                        `${v.b} = ${v.a} ${v.q} ${v.c}`,
+                        `${v.b} = \\dfrac{${v.a} ${v.c}}{${v.q}}`
+                    ];
+                    const steps = [
+                        { text: `Multiplicera båda sidor med nämnaren $${v.b}$:`, latex: `${v.a} ${v.q} = ${v.b} ${v.c}` },
+                        { text: `Dividera båda sidor med $${v.c}$ för att isolera $${v.b}$:`, latex: `${v.b} = \\dfrac{${v.a} ${v.q}}{${v.c}}` }
+                    ];
+                    return { eqLatex, targetVar: v.b, targetVarLatex: v.b, correctLatex, distractors, steps };
+                } else {
+                    const correctLatex = `${v.a} = \\dfrac{${v.b} ${v.c}}{${v.q}}`;
+                    const distractors = [
+                        `${v.a} = \\dfrac{${v.q} ${v.c}}{${v.b}}`,
+                        `${v.a} = ${v.b} ${v.c} ${v.q}`,
+                        `${v.a} = \\dfrac{${v.b}}{${v.q} ${v.c}}`
+                    ];
+                    const steps = [
+                        { text: `Multiplicera båda sidor med nämnaren $${v.b}$:`, latex: `${v.a} ${v.q} = ${v.b} ${v.c}` },
+                        { text: `Dividera båda sidor med $${v.q}$:`, latex: `${v.a} = \\dfrac{${v.b} ${v.c}}{${v.q}}` }
+                    ];
+                    return { eqLatex, targetVar: v.a, targetVarLatex: v.a, correctLatex, distractors, steps };
+                }
+            } else if (templateType === 2) {
+                // Type 2: (y + K) / a = b  or  (C1*v - k) / C2 = m
+                const numType = getRandomElement(['simple', 'coeff']);
+
+                if (numType === 'simple') {
+                    const K = getRandomInt(2, 9);
+                    const eqLatex = maybeSwapSides(`\\dfrac{y + ${K}}{a}`, 'b');
+                    const target = getRandomElement(['y', 'a']);
+
+                    if (target === 'y') {
+                        const correctLatex = `y = a b - ${K}`;
+                        const distractors = [
+                            `y = a b + ${K}`,
+                            `y = \\dfrac{b - ${K}}{a}`,
+                            `y = \\dfrac{b + ${K}}{a}`
+                        ];
+                        const steps = [
+                            { text: `Multiplicera båda sidor med nämnaren $a$:`, latex: `y + ${K} = a b` },
+                            { text: `Subtrahera $${K}$ från båda sidor:`, latex: `y = a b - ${K}` }
+                        ];
+                        return { eqLatex, targetVar: 'y', targetVarLatex: 'y', correctLatex, distractors, steps };
+                    } else {
+                        const correctLatex = `a = \\dfrac{y + ${K}}{b}`;
+                        const distractors = [
+                            `a = \\dfrac{y - ${K}}{b}`,
+                            `a = b(y + ${K})`,
+                            `a = \\dfrac{b}{y + ${K}}`
+                        ];
+                        const steps = [
+                            { text: `Multiplicera båda sidor med $a$:`, latex: `y + ${K} = a b` },
+                            { text: `Dividera med $b$:`, latex: `a = \\dfrac{y + ${K}}{b}` }
+                        ];
+                        return { eqLatex, targetVar: 'a', targetVarLatex: 'a', correctLatex, distractors, steps };
+                    }
+                } else {
+                    const C1 = getRandomInt(2, 4);
+                    const C2 = getRandomInt(2, 5);
+                    const eqLatex = maybeSwapSides(`\\dfrac{${C1}v - k}{${C2}}`, 'm');
+                    const target = getRandomElement(['v', 'k']);
+
+                    if (target === 'v') {
+                        const correctLatex = `v = \\dfrac{${C2}m + k}{${C1}}`;
+                        const distractors = [
+                            `v = \\dfrac{${C2}m - k}{${C1}}`,
+                            `v = \\dfrac{m + k}{${C1} \\cdot ${C2}}`,
+                            `v = ${C1}(${C2}m + k)`
+                        ];
+                        const steps = [
+                            { text: `Multiplicera båda sidor med $${C2}$:`, latex: `${C1}v - k = ${C2}m` },
+                            { text: `Addera $k$ till båda sidor:`, latex: `${C1}v = ${C2}m + k` },
+                            { text: `Dividera med $${C1}$:`, latex: `v = \\dfrac{${C2}m + k}{${C1}}` }
+                        ];
+                        return { eqLatex, targetVar: 'v', targetVarLatex: 'v', correctLatex, distractors, steps };
+                    } else {
+                        const correctLatex = `k = ${C1}v - ${C2}m`;
+                        const distractors = [
+                            `k = ${C1}v + ${C2}m`,
+                            `k = ${C2}m - ${C1}v`,
+                            `k = \\dfrac{${C1}v - m}{${C2}}`
+                        ];
+                        const steps = [
+                            { text: `Multiplicera båda sidor med $${C2}$:`, latex: `${C1}v - k = ${C2}m` },
+                            { text: `Subtrahera $${C2}m$ och addera $k$ till båda sidor:`, latex: `k = ${C1}v - ${C2}m` }
+                        ];
+                        return { eqLatex, targetVar: 'k', targetVarLatex: 'k', correctLatex, distractors, steps };
+                    }
+                }
+            } else if (templateType === 3) {
+                // Type 3: 2k + m = 5m - 4p
+                const A = getRandomInt(2, 4);
+                const B = getRandomInt(4, 7);
+                const C = getRandomInt(2, 5);
+                const diffB = B - 1;
+
+                const eqLatex = maybeSwapSides(`${A}k + m`, `${B}m - ${C}p`);
+                const target = getRandomElement(['m', 'k', 'p']);
+
+                if (target === 'm') {
+                    const correctLatex = `m = \\dfrac{${A}k + ${C}p}{${diffB}}`;
+                    const distractors = [
+                        `m = \\dfrac{${A}k - ${C}p}{${diffB}}`,
+                        `m = \\dfrac{${A}k + ${C}p}{${B + 1}}`,
+                        `m = ${diffB}(${A}k + ${C}p)`
+                    ];
+                    const steps = [
+                        { text: `Samla alla $m$-termer till en sida genom att subtrahera $m$:`, latex: `${A}k = ${B}m - m - ${C}p \\implies ${A}k = ${diffB}m - ${C}p` },
+                        { text: `Addera $${C}p$ till båda sidor:`, latex: `${A}k + ${C}p = ${diffB}m` },
+                        { text: `Dividera med $${diffB}$:`, latex: `m = \\dfrac{${A}k + ${C}p}{${diffB}}` }
+                    ];
+                    return { eqLatex, targetVar: 'm', targetVarLatex: 'm', correctLatex, distractors, steps };
+                } else if (target === 'k') {
+                    const correctLatex = `k = \\dfrac{${diffB}m - ${C}p}{${A}}`;
+                    const distractors = [
+                        `k = \\dfrac{${diffB}m + ${C}p}{${A}}`,
+                        `k = \\dfrac{${B}m - ${C}p}{${A}}`,
+                        `k = ${A}(${diffB}m - ${C}p)`
+                    ];
+                    const steps = [
+                        { text: `Subtrahera $m$ från båda sidor:`, latex: `${A}k = ${diffB}m - ${C}p` },
+                        { text: `Dividera båda sidor med $${A}$:`, latex: `k = \\dfrac{${diffB}m - ${C}p}{${A}}` }
+                    ];
+                    return { eqLatex, targetVar: 'k', targetVarLatex: 'k', correctLatex, distractors, steps };
+                } else {
+                    const correctLatex = `p = \\dfrac{${diffB}m - ${A}k}{${C}}`;
+                    const distractors = [
+                        `p = \\dfrac{${diffB}m + ${A}k}{${C}}`,
+                        `p = \\dfrac{${A}k - ${diffB}m}{${C}}`,
+                        `p = ${C}(${diffB}m - ${A}k)`
+                    ];
+                    const steps = [
+                        { text: `Flytta $${C}p$ till vänsterledet och övriga termer till högerledet:`, latex: `${C}p = ${diffB}m - ${A}k` },
+                        { text: `Dividera med $${C}$:`, latex: `p = \\dfrac{${diffB}m - ${A}k}{${C}}` }
+                    ];
+                    return { eqLatex, targetVar: 'p', targetVarLatex: 'p', correctLatex, distractors, steps };
+                }
+            } else {
+                // Type 4: 17 + k = 13h - 5k
+                const K = getRandomInt(10, 25);
+                const C1 = getRandomInt(8, 15);
+                const C2 = getRandomInt(3, 7);
+
+                const eqLatex = maybeSwapSides(`${K} + k`, `${C1}h - ${C2}k`);
+                const sumCoeff = 1 + C2;
+
+                const target = getRandomElement(['h', 'k']);
+
+                if (target === 'h') {
+                    const correctLatex = `h = \\dfrac{${K} + ${sumCoeff}k}{${C1}}`;
+                    const distractors = [
+                        `h = \\dfrac{${K} - ${sumCoeff}k}{${C1}}`,
+                        `h = \\dfrac{${K} + ${C2 - 1}k}{${C1}}`,
+                        `h = ${C1}(${K} + ${sumCoeff}k)`
+                    ];
+                    const steps = [
+                        { text: `Addera $${C2}k$ till båda sidor för att samla $k$-termerna:`, latex: `${K} + k + ${C2}k = ${C1}h \\implies ${K} + ${sumCoeff}k = ${C1}h` },
+                        { text: `Dividera båda sidor med $${C1}$:`, latex: `h = \\dfrac{${K} + ${sumCoeff}k}{${C1}}` }
+                    ];
+                    return { eqLatex, targetVar: 'h', targetVarLatex: 'h', correctLatex, distractors, steps };
+                } else {
+                    const correctLatex = `k = \\dfrac{${C1}h - ${K}}{${sumCoeff}}`;
+                    const distractors = [
+                        `k = \\dfrac{${C1}h + ${K}}{${sumCoeff}}`,
+                        `k = \\dfrac{${C1}h - ${K}}{${C2 - 1}}`,
+                        `k = ${sumCoeff}(${C1}h - ${K})`
+                    ];
+                    const steps = [
+                        { text: `Samla alla $k$-termer på en sida:`, latex: `${K} + ${sumCoeff}k = ${C1}h` },
+                        { text: `Subtrahera $${K}$ från båda sidor:`, latex: `${sumCoeff}k = ${C1}h - ${K}` },
+                        { text: `Dividera med $${sumCoeff}$:`, latex: `k = \\dfrac{${C1}h - ${K}}{${sumCoeff}}` }
+                    ];
+                    return { eqLatex, targetVar: 'k', targetVarLatex: 'k', correctLatex, distractors, steps };
+                }
+            }
+        }
+
+        /**
+         * TIER 3 GENERATORS
+         * Parentheses, multi-variable fractions, multi-step expressions
+         */
+        function generateTier3() {
+            const templateType = getRandomInt(1, 4);
+
+            if (templateType === 1) {
+                // Type 1: a(x - C) = b  or  b / a = x - C (if target is b)
+                const C = getRandomInt(2, 6);
+                const sign = Math.random() > 0.5 ? '-' : '+';
+                const oppSign = sign === '-' ? '+' : '-';
+                const target = getRandomElement(['x', 'a', 'b']);
+
+                if (target === 'x') {
+                    const eqLatex = maybeSwapSides(`a(x ${sign} ${C})`, 'b');
+                    const correctLatex = `x = \\dfrac{b}{a} ${oppSign} ${C}`;
+                    const distractors = [
+                        `x = \\dfrac{b ${sign} ${C}}{a}`,
+                        `x = \\dfrac{b}{a} ${sign} ${C}`,
+                        `x = a b ${oppSign} ${C}`
+                    ];
+                    const steps = [
+                        { text: `Dividera båda sidor med faktorn $a$:`, latex: `x ${sign} ${C} = \\dfrac{b}{a}` },
+                        { text: `Isolera $x$ genom motsatt operation för $${C}$:`, latex: `x = \\dfrac{b}{a} ${oppSign} ${C}` }
+                    ];
+                    return { eqLatex, targetVar: 'x', targetVarLatex: 'x', correctLatex, distractors, steps };
+                } else if (target === 'a') {
+                    const eqLatex = maybeSwapSides(`a(x ${sign} ${C})`, 'b');
+                    const correctLatex = `a = \\dfrac{b}{x ${sign} ${C}}`;
+                    const distractors = [
+                        `a = \\dfrac{x ${sign} ${C}}{b}`,
+                        `a = b(x ${sign} ${C})`,
+                        `a = \\dfrac{b}{x} ${sign} ${C}`
+                    ];
+                    const steps = [
+                        { text: `Dividera båda sidor med hela parentesen $(x ${sign} ${C})$:`, latex: `a = \\dfrac{b}{x ${sign} ${C}}` }
+                    ];
+                    return { eqLatex, targetVar: 'a', targetVarLatex: 'a', correctLatex, distractors, steps };
+                } else {
+                    // Target 'b': Start equation as b / a = x - C so 'b' is NOT isolated
+                    const eqLatex = maybeSwapSides(`\\dfrac{b}{a}`, `x ${sign} ${C}`);
+                    const correctLatex = `b = a(x ${sign} ${C})`;
+                    const distractors = [
+                        `b = \\dfrac{a}{x ${sign} ${C}}`,
+                        `b = \\dfrac{x ${sign} ${C}}{a}`,
+                        `b = a x ${sign} ${C}`
+                    ];
+                    const steps = [
+                        { text: `Multiplicera båda sidor med $a$ för att isolera $b$:`, latex: `b = a(x ${sign} ${C})` }
+                    ];
+                    return { eqLatex, targetVar: 'b', targetVarLatex: 'b', correctLatex, distractors, steps };
+                }
+            } else if (templateType === 2) {
+                // Type 2: (a + b) / u = c
+                const eqLatex = maybeSwapSides(`\\dfrac{a + b}{u}`, 'c');
+                const target = getRandomElement(['u', 'a', 'b']);
+
+                if (target === 'u') {
+                    const correctLatex = `u = \\dfrac{a + b}{c}`;
+                    const distractors = [
+                        `u = c(a + b)`,
+                        `u = \\dfrac{c}{a + b}`,
+                        `u = \\dfrac{a - b}{c}`
+                    ];
+                    const steps = [
+                        { text: `Multiplicera båda sidor med nämnaren $u$:`, latex: `a + b = c \\cdot u` },
+                        { text: `Dividera med $c$ för att isolera $u$:`, latex: `u = \\dfrac{a + b}{c}` }
+                    ];
+                    return { eqLatex, targetVar: 'u', targetVarLatex: 'u', correctLatex, distractors, steps };
+                } else if (target === 'a') {
+                    const correctLatex = `a = c u - b`;
+                    const distractors = [
+                        `a = c u + b`,
+                        `a = \\dfrac{c - b}{u}`,
+                        `a = \\dfrac{u}{c} - b`
+                    ];
+                    const steps = [
+                        { text: `Multiplicera båda sidor med $u$:`, latex: `a + b = c u` },
+                        { text: `Subtrahera $b$ från båda sidor:`, latex: `a = c u - b` }
+                    ];
+                    return { eqLatex, targetVar: 'a', targetVarLatex: 'a', correctLatex, distractors, steps };
+                } else {
+                    const correctLatex = `b = c u - a`;
+                    const distractors = [
+                        `b = c u + a`,
+                        `b = \\dfrac{c - a}{u}`,
+                        `b = \\dfrac{u}{c} - a`
+                    ];
+                    const steps = [
+                        { text: `Multiplicera båda sidor med $u$:`, latex: `a + b = c u` },
+                        { text: `Subtrahera $a$ från båda sidor:`, latex: `b = c u - a` }
+                    ];
+                    return { eqLatex, targetVar: 'b', targetVarLatex: 'b', correctLatex, distractors, steps };
+                }
+            } else if (templateType === 3) {
+                // Type 3: (2k + 3m) / n = p - q
+                const A = getRandomInt(2, 4);
+                const B = getRandomInt(2, 5);
+
+                const eqLatex = maybeSwapSides(`\\dfrac{${A}k + ${B}m}{n}`, `p - q`);
+                const target = getRandomElement(['k', 'n', 'p']);
+
+                if (target === 'k') {
+                    const correctLatex = `k = \\dfrac{n(p - q) - ${B}m}{${A}}`;
+                    const distractors = [
+                        `k = \\dfrac{n(p - q) + ${B}m}{${A}}`,
+                        `k = \\dfrac{p - q - ${B}m}{${A}n}`,
+                        `k = ${A}(n(p - q) - ${B}m)`
+                    ];
+                    const steps = [
+                        { text: `Multiplicera båda sidor med nämnaren $n$:`, latex: `${A}k + ${B}m = n(p - q)` },
+                        { text: `Subtrahera $${B}m$ från båda sidor:`, latex: `${A}k = n(p - q) - ${B}m` },
+                        { text: `Dividera med koefficienten $${A}$:`, latex: `k = \\dfrac{n(p - q) - ${B}m}{${A}}` }
+                    ];
+                    return { eqLatex, targetVar: 'k', targetVarLatex: 'k', correctLatex, distractors, steps };
+                } else if (target === 'n') {
+                    const correctLatex = `n = \\dfrac{${A}k + ${B}m}{p - q}`;
+                    const distractors = [
+                        `n = \\dfrac{p - q}{${A}k + ${B}m}`,
+                        `n = (${A}k + ${B}m)(p - q)`,
+                        `n = \\dfrac{${A}k - ${B}m}{p - q}`
+                    ];
+                    const steps = [
+                        { text: `Multiplicera båda sidor med $n$:`, latex: `${A}k + ${B}m = n(p - q)` },
+                        { text: `Dividera med uttrycket $(p - q)$:`, latex: `n = \\dfrac{${A}k + ${B}m}{p - q}` }
+                    ];
+                    return { eqLatex, targetVar: 'n', targetVarLatex: 'n', correctLatex, distractors, steps };
+                } else {
+                    const correctLatex = `p = \\dfrac{${A}k + ${B}m}{n} + q`;
+                    const distractors = [
+                        `p = \\dfrac{${A}k + ${B}m}{n} - q`,
+                        `p = \\dfrac{${A}k + ${B}m + q}{n}`,
+                        `p = n(${A}k + ${B}m) + q`
+                    ];
+                    const steps = [
+                        { text: `Addera $q$ till båda sidor för att isolera $p$:`, latex: `p = \\dfrac{${A}k + ${B}m}{n} + q` }
+                    ];
+                    return { eqLatex, targetVar: 'p', targetVarLatex: 'p', correctLatex, distractors, steps };
+                }
+            } else {
+                // Type 4: 3z - 2w = w + 8
+                const A = getRandomInt(2, 5);
+                const B = getRandomInt(2, 4);
+                const C = getRandomInt(1, 4);
+                const D = getRandomInt(4, 12);
+                const sumB = B + C;
+
+                const eqLatex = maybeSwapSides(`${A}z - ${B}w`, `${C === 1 ? '' : C}w + ${D}`);
+                const target = getRandomElement(['z', 'w']);
+
+                if (target === 'z') {
+                    const correctLatex = `z = \\dfrac{${sumB}w + ${D}}{${A}}`;
+                    const distractors = [
+                        `z = \\dfrac{${sumB}w - ${D}}{${A}}`,
+                        `z = \\dfrac{${Math.abs(B - C)}w + ${D}}{${A}}`,
+                        `z = ${A}(${sumB}w + ${D})`
+                    ];
+                    const steps = [
+                        { text: `Addera $${B}w$ till båda sidor för att samla $w$-termerna:`, latex: `${A}z = ${C === 1 ? '' : C}w + ${B}w + ${D} \\implies ${A}z = ${sumB}w + ${D}` },
+                        { text: `Dividera båda sidor med $${A}$:`, latex: `z = \\dfrac{${sumB}w + ${D}}{${A}}` }
+                    ];
+                    return { eqLatex, targetVar: 'z', targetVarLatex: 'z', correctLatex, distractors, steps };
+                } else {
+                    const correctLatex = `w = \\dfrac{${A}z - ${D}}{${sumB}}`;
+                    const distractors = [
+                        `w = \\dfrac{${A}z + ${D}}{${sumB}}`,
+                        `w = \\dfrac{${A}z - ${D}}{${Math.abs(B - C) || 1}}`,
+                        `w = ${sumB}(${A}z - ${D})`
+                    ];
+                    const steps = [
+                        { text: `Samla alla $w$-termer i högerledet:`, latex: `${A}z - ${D} = ${sumB}w` },
+                        { text: `Dividera med $${sumB}$:`, latex: `w = \\dfrac{${A}z - ${D}}{${sumB}}` }
+                    ];
+                    return { eqLatex, targetVar: 'w', targetVarLatex: 'w', correctLatex, distractors, steps };
+                }
+            }
+        }
+
+        function loadQuestion() {
+            answered = false;
+            document.getElementById('feedbackBanner').classList.add('hidden');
+            document.getElementById('solutionCard').classList.add('hidden');
+            document.getElementById('showSolutionBtn').classList.remove('hidden');
+
+            // Select problem generator based on invisible currentTier state
+            // Loop guarantees target variable is NEVER already isolated upon generation
+            let problemData;
+            let attempts = 0;
+            do {
+                if (currentTier === 1) problemData = generateTier1();
+                else if (currentTier === 2) problemData = generateTier2();
+                else problemData = generateTier3();
+                attempts++;
+            } while (isTargetIsolated(problemData.eqLatex, problemData.targetVar) && attempts < 15);
+
+            currentProblem = problemData;
+
+            // Render Target Variable & Main Equation
+            katex.render(problemData.targetVarLatex, document.getElementById('targetVarDisplay'), { throwOnError: false });
+            katex.render(problemData.eqLatex, document.getElementById('equationDisplay'), { displayMode: true, throwOnError: false });
+
+            // Create 4 multiple choice options
+            let rawOptions = [
+                { latex: problemData.correctLatex, isCorrect: true },
+                ...problemData.distractors.map(d => ({ latex: d, isCorrect: false }))
+            ];
+
+            // Ensure unique option texts
+            const seen = new Set();
+            let filteredOptions = [];
+            for (let opt of rawOptions) {
+                if (!seen.has(opt.latex)) {
+                    seen.add(opt.latex);
+                    filteredOptions.push(opt);
+                }
+            }
+            
+            while (filteredOptions.length < 4) {
+                const fallback = `${problemData.targetVar} = ${filteredOptions.length + 1}`;
+                if (!seen.has(fallback)) {
+                    seen.add(fallback);
+                    filteredOptions.push({ latex: fallback, isCorrect: false });
+                }
+            }
+
+            const shuffled = shuffleArray(filteredOptions);
+            const labels = ['A', 'B', 'C', 'D'];
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            shuffled.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `choice-btn w-full bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 hover:border-brand-500 rounded-2xl p-4 text-left transition flex items-center space-x-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm`;
+                btn.onclick = () => selectOption(idx, opt.isCorrect);
+
+                const labelSpan = document.createElement('span');
+                labelSpan.className = `w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 rounded-xl bg-slate-200 text-slate-700 font-bold text-sm sm:text-base flex items-center justify-center`;
+                labelSpan.innerText = labels[idx];
+
+                const mathDiv = document.createElement('div');
+                mathDiv.className = `overflow-x-auto flex-grow text-slate-900 py-1`;
+                katex.render(opt.latex, mathDiv, { throwOnError: false });
+
+                btn.appendChild(labelSpan);
+                btn.appendChild(mathDiv);
+                container.appendChild(btn);
+
+                opt.btnRef = btn;
+            });
+
+            currentProblem.shuffledOptions = shuffled;
+            renderSteps();
+        }
+
+        function selectOption(index, isCorrect) {
+            if (answered) return;
+            answered = true;
+
+            const options = currentProblem.shuffledOptions;
+            const chosenBtn = options[index].btnRef;
+
+            options.forEach((opt) => {
+                opt.btnRef.disabled = true;
+                opt.btnRef.classList.remove('hover:bg-slate-100', 'hover:border-brand-500');
+
+                if (opt.isCorrect) {
+                    opt.btnRef.classList.add('bg-emerald-50', 'border-emerald-500', 'ring-2', 'ring-emerald-400');
+                    opt.btnRef.querySelector('span').classList.add('bg-emerald-600', 'text-white');
+                }
+            });
+
+            const feedbackBanner = document.getElementById('feedbackBanner');
+            const feedbackText = document.getElementById('feedbackText');
+
+            if (isCorrect) {
+                chosenBtn.classList.add('bg-emerald-50', 'border-emerald-500');
+                feedbackBanner.className = 'mt-4 p-4 rounded-2xl border text-sm sm:text-base font-semibold flex items-center justify-between bg-emerald-50 border-emerald-300 text-emerald-900 shadow-sm';
+                feedbackText.innerHTML = `
+                    <svg class="w-6 h-6 text-emerald-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>Rätt svar! Bra jobbat! 🎉</span>
+                `;
+
+                correctTotal++;
+                consecutiveCorrect++;
+                consecutiveWrong = 0;
+
+                // Invisible difficulty adjustment: Increase level if 5 correct in a row
+                if (consecutiveCorrect % 5 === 0 && currentTier < 3) {
+                    currentTier++;
+                }
+
+            } else {
+                chosenBtn.classList.add('bg-rose-50', 'border-rose-500', 'ring-2', 'ring-rose-400');
+                chosenBtn.querySelector('span').classList.add('bg-rose-600', 'text-white');
+
+                feedbackBanner.className = 'mt-4 p-4 rounded-2xl border text-sm sm:text-base font-semibold flex items-center justify-between bg-rose-50 border-rose-300 text-rose-900 shadow-sm';
+                feedbackText.innerHTML = `
+                    <svg class="w-6 h-6 text-rose-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>Inte riktigt rätt. Se lösningen nedan.</span>
+                `;
+
+                incorrectTotal++;
+                consecutiveWrong++;
+                consecutiveCorrect = 0; // Reset streak on wrong answer
+
+                // Invisible difficulty adjustment: Decrease level if 3 wrong in a row
+                if (consecutiveWrong >= 3 && currentTier > 1) {
+                    currentTier--;
+                    consecutiveWrong = 0;
+                }
+
+                // Show step-by-step solution automatically on wrong answer
+                document.getElementById('solutionCard').classList.remove('hidden');
+                document.getElementById('showSolutionBtn').classList.add('hidden');
+            }
+
+            feedbackBanner.classList.remove('hidden');
+            updateStatsUI();
+        }
+
+        function renderSteps() {
+            const stepsList = document.getElementById('stepsList');
+            stepsList.innerHTML = '';
+
+            if (!currentProblem || !currentProblem.steps) return;
+
+            currentProblem.steps.forEach((step, idx) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'bg-white/90 border border-emerald-200/80 p-3.5 sm:p-4 rounded-2xl shadow-sm space-y-2';
+
+                const textPara = document.createElement('p');
+                textPara.className = 'text-xs sm:text-sm text-slate-800 font-medium leading-relaxed';
+                
+                // Renders $math$ tags within step explanation into clean KaTeX HTML
+                const parsedText = renderMathInText(step.text);
+                textPara.innerHTML = `<span class="font-bold text-emerald-800 mr-1.5">Steg ${idx + 1}:</span>${parsedText}`;
+
+                const mathContainer = document.createElement('div');
+                mathContainer.className = 'bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-200 text-center overflow-x-auto';
+                
+                try {
+                    katex.render(step.latex, mathContainer, { displayMode: true, throwOnError: false });
+                } catch (e) {
+                    mathContainer.innerText = step.latex;
+                }
+
+                stepDiv.appendChild(textPara);
+                stepDiv.appendChild(mathContainer);
+                stepsList.appendChild(stepDiv);
+            });
+        }
+
+        function toggleSolution() {
+            const card = document.getElementById('solutionCard');
+            card.classList.toggle('hidden');
+        }
+
+        function nextQuestion() {
+            loadQuestion();
+        }
+
+        function updateStatsUI() {
+            document.getElementById('correctCount').innerText = correctTotal;
+            document.getElementById('incorrectCount').innerText = incorrectTotal;
+            document.getElementById('streakCountText').innerText = consecutiveCorrect;
+        }
+
+        function resetStats() {
+            correctTotal = 0;
+            incorrectTotal = 0;
+            consecutiveCorrect = 0;
+            consecutiveWrong = 0;
+            currentTier = 1;
+            timerSeconds = 0;
+            updateTimerDisplay();
+            updateStatsUI();
+            loadQuestion();
+        }
+
+        window.onload = function() {
+            startTimer();
+            loadQuestion();
+            updateStatsUI();
+        };
+    </script>
+</body>
+</html>
