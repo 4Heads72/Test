@@ -365,7 +365,7 @@
          * Simple linear equations, ratios, simple fractions
          */
         function generateTier1() {
-            const templateType = getRandomInt(1, 5);
+            const templateType = getRandomInt(1, 6);
 
             if (templateType === 1) {
                 // Type 1: 3x - 5 = y + 2
@@ -411,7 +411,7 @@
 
                     return { eqLatex, targetVar: 'y', targetVarLatex: 'y', correctLatex, distractors, steps };
                 }
-            } else if (templateType === 2) {
+            } else if (templateType === 2 || templateType === 6) {
                 // Type 2: Ratio p*n = m or m/p = n (ensuring target is NOT isolated initially)
                 const vars = getRandomElement([
                     { top: 'm', bot: 'n', res: 'p' },
